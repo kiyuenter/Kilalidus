@@ -368,8 +368,8 @@ export default function App() {
               <input name="takeProfit" type="number" step="0.0001" placeholder="Take Profit" value={form.takeProfit} onChange={handleChange} className="border border-gray-600 p-3 rounded-lg bg-gray-700 text-white focus:ring-blue-500 focus:border-blue-500" required />
 
               {/* Pip Gain/Loss */}
-              <input name="pipGain" type="number" step="0.0001" placeholder="Pip Gain/Loss" value={form.pipgainloss} onChange={handleChange} className="border border-gray-600 p-3 rounded-lg bg-gray-700 text-white focus:ring-blue-500 focus:border-blue-500" required />
-              <input name="pipLoss" type="number" step="0.0001" placeholder="Pip Gain/Loss" value={form.pipgainloss} onChange={handleChange} className="border border-gray-600 p-3 rounded-lg bg-gray-700 text-white focus:ring-blue-500 focus:border-blue-500" required />
+              <input name="pipGain" type="number" step="0.0001" placeholder="Pip Gain" value={form.pipgainloss} onChange={handleChange} className="border border-gray-600 p-3 rounded-lg bg-gray-700 text-white focus:ring-blue-500 focus:border-blue-500" required />
+              <input name="pipLoss" type="number" step="0.0001" placeholder="Pip Loss" value={form.pipgainloss} onChange={handleChange} className="border border-gray-600 p-3 rounded-lg bg-gray-700 text-white focus:ring-blue-500 focus:border-blue-500" required />
 
               {/* Risk % per trade */}
               <input name="riskpertrade" type="number" step="0.0001" placeholder="Risk Per Trade" value={form.riskpertrade} onChange={handleChange} className="border border-gray-600 p-3 rounded-lg bg-gray-700 text-white focus:ring-blue-500 focus:border-blue-500" required />
