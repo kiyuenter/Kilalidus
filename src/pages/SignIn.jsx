@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import Navbar from "../components/Navbar";
 import { signInWithEmailAndPassword } from "firebase/auth";
-import { auth } from "../firebase";
+import { auth, db } from "../firebase"; // ✅ use db here
+import { ref, get } from "firebase/database";
 import { useNavigate } from "react-router-dom";
 
 const SignIn = () => {
@@ -14,16 +15,32 @@ const SignIn = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     setError("");
     setLoading(true);
 
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      // 1️⃣ Sign in the user
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const uid = userCredential.user.uid;
+
+      // 2️⃣ Fetch user data from Realtime Database
+      const userRef = ref(db, `users/${uid}`);
+      const snapshot = await get(userRef);
+
+      if (snapshot.exists()) {
+        const userData = snapshot.val();
+        console.log("User data:", userData);
+
+        // Optional: Store in localStorage
+        localStorage.setItem("userData", JSON.stringify(userData));
+      } else {
+        console.log("No user data found for this UID.");
+      }
+
+      // 3️⃣ Navigate to dashboard
       navigate("/dashboard");
-      // Optionally redirect user to dashboard here, e.g.:
-      // navigate("/dashboard");
     } catch (err) {
+      console.error("Sign in or fetch error:", err);
       setError(err.message);
     } finally {
       setLoading(false);

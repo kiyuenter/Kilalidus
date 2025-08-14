@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FaPlus, FaBookOpen, FaEdit, FaTrash, FaTimesCircle, FaChevronDown, FaChevronUp } from 'react-icons/fa';
-import { getDatabase, ref, onValue, push, update, remove } from "firebase/database";
+import { ref, onValue, push, update, remove } from "firebase/database";
 import { onAuthStateChanged } from 'firebase/auth';
 import Sidebar from '../components/Sidebar';
 import { auth, db } from '../firebase';
@@ -18,8 +18,8 @@ const Notebook = () => {
         pnl: '',
     });
 
-    // State for Firebase and authentication
-    const [isAuthReady, setIsAuthReady] = useState(false);
+    // State for the current authenticated user
+    const [user, setUser] = useState(null);
     
     // State to track if an entry is being edited
     const [editingEntryId, setEditingEntryId] = useState(null);
@@ -31,34 +31,31 @@ const Notebook = () => {
     // State to track loading status
     const [loading, setLoading] = useState(true);
 
-    // Set up auth listener
+    // Set up auth listener to get the current user
     useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, (user) => {
-            if (user) {
-                setIsAuthReady(true);
-            } else {
-                setIsAuthReady(true);
-            }
+        const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+            setUser(currentUser);
+            setLoading(false);
         });
         return () => unsubscribe();
     }, []);
 
-    // Set up real-time data listener for journal entries
+    // Set up real-time data listener for journal entries based on user UID
     useEffect(() => {
-        // Only run if the db object is available and the user is authenticated
-        if (!db || !isAuthReady) {
-            setLoading(true);
+        if (!user) { // If no user is logged in, clear entries and stop
+            setEntries([]);
+            setLoading(false);
             return;
         }
 
-        // Reference to the 'journalEntries' collection in the database
-        const entriesRef = ref(db, "journalEntries");
+        // Reference to the 'journalEntries' for the specific user in the database
+        const entriesRef = ref(db, `journalEntries/${user.uid}`);
 
-        // The onValue listener subscribes to real-time updates
+        // The onValue listener subscribes to real-time updates for the user's data
         const unsubscribe = onValue(entriesRef, (snapshot) => {
             const data = snapshot.val();
             if (data) {
-                // Map the Firebase object to an array with IDs and expand state
+                // Map the Firebase object to an array with IDs and expanded state
                 const loadedEntries = Object.keys(data).map(key => ({
                     id: key,
                     ...data[key],
@@ -75,7 +72,7 @@ const Notebook = () => {
         });
 
         return () => unsubscribe();
-    }, [isAuthReady]);
+    }, [user, db]);
 
     // Handle form input changes
     const handleInputChange = (e) => {
@@ -89,15 +86,15 @@ const Notebook = () => {
     // Handle form submission (add or update)
     const handleAddOrUpdateEntry = async (e) => {
         e.preventDefault();
+        if (!user) return; // Ensure a user is logged in before proceeding
+        
         const { title, date, pair, notes, pnl } = newEntry;
         if (!title || !date || !pair) return;
         
         try {
-            const entriesRef = ref(db, "journalEntries");
-
             if (editingEntryId) {
-                // Update existing entry
-                const entryRef = ref(db, `journalEntries/${editingEntryId}`);
+                // Update existing entry for the current user
+                const entryRef = ref(db, `journalEntries/${user.uid}/${editingEntryId}`);
                 await update(entryRef, {
                     title,
                     date,
@@ -107,8 +104,9 @@ const Notebook = () => {
                 });
                 setEditingEntryId(null);
             } else {
-                // Add new entry
-                await push(entriesRef, {
+                // Add new entry for the current user
+                const userEntriesRef = ref(db, `journalEntries/${user.uid}`);
+                await push(userEntriesRef, {
                     title,
                     date,
                     pair,
@@ -138,9 +136,9 @@ const Notebook = () => {
     
     // Handle deleting an entry
     const handleDeleteEntry = async () => {
-        if (!entryToDelete) return;
+        if (!entryToDelete || !user) return; // Ensure a user is logged in
         try {
-            const entryRef = ref(db, `journalEntries/${entryToDelete.id}`);
+            const entryRef = ref(db, `journalEntries/${user.uid}/${entryToDelete.id}`);
             await remove(entryRef);
             setShowDeleteModal(false);
             setEntryToDelete(null);

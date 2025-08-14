@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { FaPlus, FaChevronDown, FaChevronUp, FaBookOpen, FaEdit, FaTrash, FaTimesCircle } from 'react-icons/fa';
 import { getDatabase, ref, onValue, push, update, remove } from "firebase/database";
 import { onAuthStateChanged } from 'firebase/auth';
+import { signInAnonymously } from 'firebase/auth'; // Import signInAnonymously
 
 // Import the original Sidebar component from your components directory
 import Sidebar from '../components/Sidebar'; 
@@ -23,6 +24,7 @@ const App = () => {
 
     // State for Firebase and authentication
     const [isAuthReady, setIsAuthReady] = useState(false);
+    const [userId, setUserId] = useState(null); // New state to store the user ID
     
     // State for editing a strategy
     const [editingStrategyId, setEditingStrategyId] = useState(null);
@@ -34,17 +36,22 @@ const App = () => {
     // State to track loading status
     const [loading, setLoading] = useState(true);
 
-    // Set up auth listener
+    // Set up auth listener to get the user ID
     useEffect(() => {
-        // We use onAuthStateChanged to ensure we wait for the auth state to be ready
-        const unsubscribe = onAuthStateChanged(auth, (user) => {
+        const unsubscribe = onAuthStateChanged(auth, async (user) => {
             if (user) {
+                setUserId(user.uid);
                 setIsAuthReady(true);
             } else {
-                // Handle cases where the user is not signed in
-                // For this component, we can simply set auth readiness to true
-                // as the firebase.js file handles the initial sign-in.
-                setIsAuthReady(true);
+                try {
+                    // Automatically sign in anonymously if no user is found
+                    const anonymousUserCredential = await signInAnonymously(auth);
+                    setUserId(anonymousUserCredential.user.uid);
+                    setIsAuthReady(true);
+                } catch (error) {
+                    console.error("Anonymous sign-in failed:", error);
+                    setIsAuthReady(true); // Still set to true to unblock the UI
+                }
             }
         });
         return () => unsubscribe();
@@ -53,23 +60,21 @@ const App = () => {
     // Set up real-time data listener for strategies
     useEffect(() => {
         // Only run if the db object is available and the user is authenticated
-        if (!db || !isAuthReady) {
+        if (!db || !userId) {
             setLoading(true);
             return;
         }
 
-        // Use a simple, direct path to mirror the Journal component
-        const strategiesRef = ref(db, "tradingStrategies");
+        const appId = '__app_id__'; // Use your actual app ID
+        const strategiesRef = ref(db, `artifacts/${appId}/users/${userId}/tradingStrategies`);
 
         // The onValue listener subscribes to real-time updates
         const unsubscribe = onValue(strategiesRef, (snapshot) => {
             const data = snapshot.val();
             if (data) {
-                // Map the Firebase object to an array with IDs and expand state
                 const loadedStrategies = Object.keys(data).map(key => ({
                     id: key,
                     ...data[key],
-                    // Ensure 'expanded' property exists, defaulting to false
                     expanded: data[key].expanded || false,
                 }));
                 setStrategies(loadedStrategies);
@@ -83,7 +88,7 @@ const App = () => {
         });
 
         return () => unsubscribe();
-    }, [isAuthReady]);
+    }, [userId]); // Depend on userId to re-fetch when it becomes available
 
     // Handle form input changes
     const handleInputChange = (e) => {
@@ -97,19 +102,18 @@ const App = () => {
     // Handle form submission (add or update)
     const handleAddOrUpdateStrategy = async (e) => {
         e.preventDefault();
+        if (!userId) return; // Ensure user is authenticated
         const { name, description, rules, pairs } = newStrategy;
         if (!name || !description) return;
         
-        // Split rules and pairs into arrays
         const rulesArray = rules.split('\n').filter(rule => rule.trim() !== '');
         const pairsArray = pairs.split(',').map(pair => pair.trim()).filter(pair => pair !== '');
         
         try {
-            const strategiesRef = ref(db, "tradingStrategies");
-
+            const appId = '__app_id__';
             if (editingStrategyId) {
                 // Update existing strategy
-                const strategyRef = ref(db, `tradingStrategies/${editingStrategyId}`);
+                const strategyRef = ref(db, `artifacts/${appId}/users/${userId}/tradingStrategies/${editingStrategyId}`);
                 await update(strategyRef, {
                     name,
                     description,
@@ -119,6 +123,7 @@ const App = () => {
                 setEditingStrategyId(null);
             } else {
                 // Add new strategy
+                const strategiesRef = ref(db, `artifacts/${appId}/users/${userId}/tradingStrategies`);
                 await push(strategiesRef, {
                     name,
                     description,
@@ -126,7 +131,6 @@ const App = () => {
                     pairs: pairsArray,
                 });
             }
-            // Clear the form
             setNewStrategy({ name: '', description: '', rules: '', pairs: '' });
         } catch (e) {
             console.error("Error adding/updating document: ", e);
@@ -147,9 +151,10 @@ const App = () => {
     
     // Handle deleting a strategy
     const handleDeleteStrategy = async () => {
-        if (!strategyToDelete) return;
+        if (!strategyToDelete || !userId) return;
         try {
-            const strategyRef = ref(db, `tradingStrategies/${strategyToDelete.id}`);
+            const appId = '__app_id__';
+            const strategyRef = ref(db, `artifacts/${appId}/users/${userId}/tradingStrategies/${strategyToDelete.id}`);
             await remove(strategyRef);
             setShowDeleteModal(false);
             setStrategyToDelete(null);
