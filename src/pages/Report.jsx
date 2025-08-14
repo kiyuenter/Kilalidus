@@ -225,7 +225,8 @@ export default function App() {
             "Entry Price": entry.entryPrice,
             "Stop Loss": entry.stopLoss,
             "Take Profit": entry.takeProfit,
-            "Pip Gain/Loss": entry.pipgainloss,
+            "Pip Gain": entry.pipGain,
+            "Pip Loss": entry.pipLoss,
 
         /* Form 2 */
             "Risk Reward": entry.rr,
