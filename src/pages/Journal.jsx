@@ -19,8 +19,23 @@ export default function App() {
     takeProfit: "",
     closeReason: "",
     profitLoss: "",
-    link: "",
-    emotionNote: ""
+    pipgainloss: "",
+    riskpertrade: "",
+    beforeLink: "",
+    afterLink: "",
+    winLoss: "",
+    cumulativeBalance: "",
+    setupName: "",
+    entryTrigger: "",
+    timeFrame: "",
+    tradeManagemet: "",
+    dailyBias: "",
+    newsEvent: "",
+    volatilityConditions: "",
+    mistakesMade: "",
+    emotionalState: "",
+    ruleAdherence: "",
+    lessonLearned: ""
   });
   const [entries, setEntries] = useState([]);
   const [editingId, setEditingId] = useState(null);
@@ -41,10 +56,20 @@ export default function App() {
     appId: "1:267336922475:web:b33249d0323b1f030a482e"
   };
 
-  const SESSIONS = ['Session','London', 'New York', 'Asian'];
-  const ENTRY_TYPES = ['Entry Model','HTF POI + MSS + FVG', 'HTF POI + MSS + FVG + BB', 'HTF POI + MSS + BB', 'HTF POI + MSS + FIBONACCHI', 'OB', 'Reversal'];
+  const SESSIONS = ['Session', 'London', 'New York', 'Asian'];
+  const ENTRY_TYPES = ['Setup Type', 'HTF POI + MSS + FVG', 'HTF POI + MSS + FVG + BB', 'HTF POI + MSS + BB', 'HTF POI + MSS + FIBONACCHI', 'OB', 'Reversal'];
   const RESULTS = ['Win', 'Loss', 'BE', 'Win with Partial'];
-  const CONFIDENCE_LEVELS = ['Low', 'Medium', 'High'];
+  const CONFIDENCE_LEVELS = ['Confidence Level', 'Low', 'Medium', 'High'];
+  const WIN_LOSS = ['Result', 'Win', 'Loss', 'Break Even'];
+  const ENTRY_TRIGGER = ['Entry Trigger', 'FVG', 'OB', 'BB', 'FIBONACCHI', 'MB'];
+  const TIME_FRAME = ['Time-frame Used', '4H + 1H + 30m + 15m + 5m + 1m', '4H + 1H + 30m + 15m + 5m', '4H + 1H + 30m + 15m', '4H + 1H + 30m', '1H + 30m + 15m + 5m + 1m', '1H + 30m + 15m + 5m', '1H + 30m + 15m'];
+  const TRADE_MANAGEMENT = ['Trade Managemet System', 'Scaling In', 'Scaling Out', 'Partial close', "Trailing SL"];
+  const DAILY_BIAS = ['Daily BIAS', 'BULLISH', 'BEARISH', 'CONSOLIDATE'];
+  const NEWS_EVENT = ['News Event', 'Nothing', 'CPI', 'PPI', 'NFP', 'FOMC'];
+  const VOLATILITY_CONDITIONS = ['Volatility Conditions', 'HIGH', 'NORMAL', 'LOW'];
+  const EMOTIONAL_STATE =   ['Emotional State', 'Auxious', 'Greedy', 'Calm', 'Revenge Trade'];
+  const MISTAKES_MADE = ['Mistake Made', 'No mistake', 'Over trade', 'Entered to early', 'Entered to late', 'Moved SL'];
+  const RULE_ADHERENCE = ['Rule Adherence', 'YES', 'NO'];
 
   // This effect handles Firebase initialization and authentication
   useEffect(() => {
@@ -52,7 +77,7 @@ export default function App() {
       try {
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
-        
+
         // Listen for authentication state changes
         const unsubscribe = onAuthStateChanged(auth, async (user) => {
           if (user) {
@@ -72,10 +97,10 @@ export default function App() {
             }
           }
         });
-        
+
         // Cleanup listener on component unmount
         return () => unsubscribe();
-        
+
       } catch (e) {
         console.error("Firebase Initialization Error:", e);
         setError("Failed to initialize Firebase. Please check your configuration.");
@@ -115,7 +140,7 @@ export default function App() {
   const sortByDate = (data) => {
     return data.sort((a, b) => new Date(a.date) - new Date(b.date));
   };
-  
+
   // Function to calculate RR based on entry price, SL, and TP
   const calculateRR = (entry, stopLoss, takeProfit) => {
     const ep = parseFloat(entry);
@@ -130,7 +155,7 @@ export default function App() {
     const reward = Math.abs(tp - ep);
     return (reward / risk).toFixed(2);
   };
-  
+
   // Memoize the R:R calculation to avoid unnecessary re-renders
   const currentRR = useMemo(() => {
     return calculateRR(form.entryPrice, form.stopLoss, form.takeProfit);
@@ -188,9 +213,9 @@ export default function App() {
     // Recalculate profitLoss only when the closeReason changes or other price inputs
     // are changed after a closeReason is set
     if (name === "closeReason" || (form.closeReason && ["entryPrice", "stopLoss", "takeProfit", "lotSize", "direction", "pair"].includes(name))) {
-        updatedForm.profitLoss = calculateProfitLossBasedOnCloseReason(updatedForm);
+      updatedForm.profitLoss = calculateProfitLossBasedOnCloseReason(updatedForm);
     }
-    
+
     setForm(updatedForm);
   };
 
@@ -206,10 +231,10 @@ export default function App() {
       rr: currentRR,
       date: new Date().toISOString().slice(0, 10),
     };
-    
+
     const db = getDatabase();
     const tradeRef = ref(db, `/artifacts/__app_id__/users/${userId}/tradingJournal/` + (editingId || ''));
-    
+
     if (editingId) {
       update(tradeRef, finalForm);
       setEditingId(null);
@@ -233,8 +258,23 @@ export default function App() {
       takeProfit: "",
       closeReason: "",
       profitLoss: "",
-      link: "",
-      emotionNote: ""
+      beforeLink: "",
+      afterLink: "",
+      pipgainloss: "",
+      riskpertrade: "",
+      winLoss: "",
+      cumulativeBalance: "",
+      setupName: "",
+      entryTrigger: "",
+      timeFrame: "",
+      tradeManagemet: "",
+      dailyBias: "",
+      newsEvent: "",
+      volatilityConditions: "",
+      mistakesMade: "",
+      emotionalState: "",
+      ruleAdherence: "",
+      lessonLearned: ""
     });
   };
 
@@ -249,7 +289,7 @@ export default function App() {
     setForm(trade);
     setEditingId(trade.id);
   };
-  
+
   // Display a loading state while Firebase is initializing and authenticating
   if (loading) {
     return (
@@ -285,80 +325,204 @@ export default function App() {
 
           {/* This shows the user's ID/Email to prove authentication */}
           <div className="bg-gray-800 p-3 rounded-lg mb-4 text-sm text-gray-400">
-              <span className="font-semibold">{userEmail ? "Your Email: " : "Your User ID: "}</span>
-              <span className="font-mono break-all">{userEmail || userId}</span>
+            <span className="font-semibold">{userEmail ? "Your Email: " : "Your User ID: "}</span>
+            <span className="font-mono break-all">{userEmail || userId}</span>
           </div>
 
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-6 p-6 bg-gray-800 rounded-2xl shadow-xl">
+          {/* Form - 1 */}
+          <form onSubmit={handleSubmit} className=" bg-gray-800 rounded-2xl shadow-xl">
+            <div className="p-4">
+              <h1 className="font-bold"> 1. Entry & Exit Details</h1>
+            </div>
             {/* Session Dropdown */}
-            <select name="session" value={form.session} onChange={handleChange} className="border border-gray-600 p-3 rounded-lg bg-gray-700 text-white focus:ring-blue-500 focus:border-blue-500">
-              {SESSIONS.map(s => <option key={s} value={s}>{s}</option>)}
-            </select>
-            
-            {/* Entry Time Input */}
-            <input name="entryTime" type="time" value={form.entryTime} onChange={handleChange} className="border border-gray-600 p-3 rounded-lg bg-gray-700 text-white focus:ring-blue-500 focus:border-blue-500" required />
-            
-            {/* Entry Type Dropdown */}
-            <select name="entryType" value={form.entryType} onChange={handleChange} className="border border-gray-600 p-3 rounded-lg bg-gray-700 text-white focus:ring-blue-500 focus:border-blue-500">
-              {ENTRY_TYPES.map(et => <option key={et} value={et}>{et}</option>)}
-            </select>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-6 p-6">
+              <select name="session" value={form.session} onChange={handleChange} className="border border-gray-600 p-3 rounded-lg bg-gray-700 text-white focus:ring-blue-500 focus:border-blue-500">
+                {SESSIONS.map(s => <option key={s} value={s}>{s}</option>)}
+              </select>
 
-            {/* Result Dropdown */}
-            <select name="result" value={form.result} onChange={handleChange} className="border border-gray-600 p-3 rounded-lg bg-gray-700 text-white focus:ring-blue-500 focus:border-blue-500">
-              {RESULTS.map(res => <option key={res} value={res}>{res}</option>)}
-            </select>
+              {/* Entry Time Input */}
+              <input name="entryTime" type="time" value={form.entryTime} onChange={handleChange} className="border border-gray-600 p-3 rounded-lg bg-gray-700 text-white focus:ring-blue-500 focus:border-blue-500" required />
 
-            {/* Confidence Level Dropdown */}
-            <select name="confidence" value={form.confidence} onChange={handleChange} className="border border-gray-600 p-3 rounded-lg bg-gray-700 text-white focus:ring-blue-500 focus:border-blue-500">
-              {CONFIDENCE_LEVELS.map(cl => <option key={cl} value={cl}>{cl}</option>)}
-            </select>
-            
-            {/* RR Display */}
-            <div className="flex items-center justify-center p-3 rounded-lg bg-gray-700 text-white border border-gray-600">
-              <span className="text-sm font-semibold text-gray-400 mr-2">R:R</span>
-              <span className="font-bold text-lg text-green-400">{currentRR}</span>
+              {/* Pair */}
+              <input name="pair" placeholder="Pair (e.g. EUR/USD)" value={form.pair} onChange={handleChange} className="border border-gray-600 p-3 rounded-lg bg-gray-700 text-white focus:ring-blue-500 focus:border-blue-500" required />
+
+              {/* Lot Size */}
+              <input name="lotSize" type="number" step="0.01" placeholder="Lot Size" value={form.lotSize} onChange={handleChange} className="border border-gray-600 p-3 rounded-lg bg-gray-700 text-white focus:ring-blue-500 focus:border-blue-500" required />
+
+              {/* Open Position Direction */}
+              <select name="direction" value={form.direction} onChange={handleChange} className="border border-gray-600 p-3 rounded-lg bg-gray-700 text-white focus:ring-blue-500 focus:border-blue-500" required>
+                <option value="">Direction</option>
+                <option value="Buy">Buy</option>
+                <option value="Sell">Sell</option>
+              </select>
+
+              {/* Entry Price */}
+              <input name="entryPrice" type="number" step="0.0001" placeholder="Entry Price" value={form.entryPrice} onChange={handleChange} className="border border-gray-600 p-3 rounded-lg bg-gray-700 text-white focus:ring-blue-500 focus:border-blue-500" required />
+
+              {/* Stop Loss */}
+              <input name="stopLoss" type="number" step="0.0001" placeholder="Stop Loss" value={form.stopLoss} onChange={handleChange} className="border border-gray-600 p-3 rounded-lg bg-gray-700 text-white focus:ring-blue-500 focus:border-blue-500" required />
+
+              {/* Take Profit */}
+              <input name="takeProfit" type="number" step="0.0001" placeholder="Take Profit" value={form.takeProfit} onChange={handleChange} className="border border-gray-600 p-3 rounded-lg bg-gray-700 text-white focus:ring-blue-500 focus:border-blue-500" required />
+
+              {/* Pip Gain/Loss */}
+              <input name="pipgainloss" type="number" step="0.0001" placeholder="Pip Gain/Loss" value={form.pipgainloss} onChange={handleChange} className="border border-gray-600 p-3 rounded-lg bg-gray-700 text-white focus:ring-blue-500 focus:border-blue-500" required />
+
+              {/* Risk % per trade */}
+              <input name="riskpertrade" type="number" step="0.0001" placeholder="Risk Per Trade" value={form.riskpertrade} onChange={handleChange} className="border border-gray-600 p-3 rounded-lg bg-gray-700 text-white focus:ring-blue-500 focus:border-blue-500" required />
+
+              {/* Close Reason dropdown */}
+              <select name="closeReason" value={form.closeReason} onChange={handleChange} className="border border-gray-600 p-3 rounded-lg bg-gray-700 text-white focus:ring-blue-500 focus:border-blue-500">
+                <option value="">Close Reason</option>
+                <option value="TP hit">TP hit</option>
+                <option value="SL hit">SL hit</option>
+                <option value="BE hit">BE hit</option>
+                <option value="Manual">Manual</option>
+              </select>
+
+              {/* Profit/Loss is now a manually editable field */}
+              <input
+                name="profitLoss"
+                type="number"
+                step="0.01"
+                placeholder="Profit/Loss"
+                value={form.profitLoss}
+                onChange={handleChange}
+                className="border border-gray-600 p-3 rounded-lg bg-gray-700 text-white focus:ring-blue-500 focus:border-blue-500"
+                readOnly={form.closeReason === "TP hit" || form.closeReason === "SL hit" || form.closeReason === "BE hit"}
+              />
             </div>
 
-            <input name="pair" placeholder="Pair (e.g. EUR/USD)" value={form.pair} onChange={handleChange} className="border border-gray-600 p-3 rounded-lg bg-gray-700 text-white focus:ring-blue-500 focus:border-blue-500" required />
-            <input name="lotSize" type="number" step="0.01" placeholder="Lot Size" value={form.lotSize} onChange={handleChange} className="border border-gray-600 p-3 rounded-lg bg-gray-700 text-white focus:ring-blue-500 focus:border-blue-500" required />
-            <select name="direction" value={form.direction} onChange={handleChange} className="border border-gray-600 p-3 rounded-lg bg-gray-700 text-white focus:ring-blue-500 focus:border-blue-500" required>
-              <option value="">Direction</option>
-              <option value="Buy">Buy</option>
-              <option value="Sell">Sell</option>
-            </select>
-            <input name="entryPrice" type="number" step="0.0001" placeholder="Entry Price" value={form.entryPrice} onChange={handleChange} className="border border-gray-600 p-3 rounded-lg bg-gray-700 text-white focus:ring-blue-500 focus:border-blue-500" required />
-            <input name="stopLoss" type="number" step="0.0001" placeholder="Stop Loss" value={form.stopLoss} onChange={handleChange} className="border border-gray-600 p-3 rounded-lg bg-gray-700 text-white focus:ring-blue-500 focus:border-blue-500" required />
-            <input name="takeProfit" type="number" step="0.0001" placeholder="Take Profit" value={form.takeProfit} onChange={handleChange} className="border border-gray-600 p-3 rounded-lg bg-gray-700 text-white focus:ring-blue-500 focus:border-blue-500" required />
-            
-            {/* Close Reason dropdown */}
-            <select name="closeReason" value={form.closeReason} onChange={handleChange} className="border border-gray-600 p-3 rounded-lg bg-gray-700 text-white focus:ring-blue-500 focus:border-blue-500">
-              <option value="">Close Reason</option>
-              <option value="TP hit">TP hit</option>
-              <option value="SL hit">SL hit</option>
-              <option value="BE hit">BE hit</option>
-              <option value="Manual">Manual</option>
-            </select>
 
-            {/* Profit/Loss is now a manually editable field */}
-            <input 
-              name="profitLoss" 
-              type="number"
-              step="0.01"
-              placeholder="Profit/Loss" 
-              value={form.profitLoss} 
-              onChange={handleChange} 
-              className="border border-gray-600 p-3 rounded-lg bg-gray-700 text-white focus:ring-blue-500 focus:border-blue-500"
-              readOnly={form.closeReason === "TP hit" || form.closeReason === "SL hit" || form.closeReason === "BE hit"}
-            />
-            <input name="link" placeholder="http://tradingview.com/sfsdf)" value={form.link} onChange={handleChange} className="border border-gray-600 p-3 rounded-lg bg-gray-700 text-white focus:ring-blue-500 focus:border-blue-500" required />
-            <textarea name="emotionNote" placeholder="Notes on emotions, reasoning, etc." value={form.emotionNote} onChange={handleChange} rows="4" className="border border-gray-600 p-3 rounded-lg bg-gray-700 text-white col-span-1 sm:col-span-2 md:col-span-3 focus:ring-blue-500 focus:border-blue-500"></textarea>
-            
-            <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-lg col-span-1 sm:col-span-2 md:col-span-3 flex items-center justify-center gap-2">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-plus-circle">
-                <circle cx="12" cy="12" r="10"></circle><path d="M8 12h8"></path><path d="M12 8v8"></path>
-              </svg> {editingId ? "Update Trade" : "Add Trade"}
-            </button>
+          {/* Form - 2*/}
+
+            <div className="p-4">
+              <h1 className="font-bold"> 2. Performance Matrics</h1>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-6 p-6">
+
+              {/* RR Display */}
+              <div className="flex items-center justify-center p-3 rounded-lg bg-gray-700 text-white border border-gray-600">
+                <span className="text-sm font-semibold text-gray-400 mr-2">R:R</span>
+                <span className="font-bold text-lg text-green-400">{currentRR}</span>
+              </div>
+
+              {/* Win/Loss Result */}
+              <select name="winLoss" value={form.winLoss} onChange={handleChange} className="border border-gray-600 p-3 rounded-lg bg-gray-700 text-white focus:ring-blue-500 focus:border-blue-500">
+                {WIN_LOSS.map(wL => <option key={wL} value={wL}>{wL}</option>)}
+              </select>
+
+              {/* Cumulative Balance */}
+              <input name="cumulativeBalance" type="number" placeholder="Cumulative Balance" value={form.cumulativeBalance} onChange={handleChange} className="border border-gray-600 p-3 rounded-lg bg-gray-700 text-white focus:ring-blue-500 focus:border-blue-500" required />
+            </div>
+
+
+          {/* Form - 3*/}
+
+            <div className="p-4">
+              <h1 className="font-bold"> 3. Strategy Tracking</h1>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-6 p-6">
+
+              {/* Strategy Name */}
+              <input name="setupName" type="text" placeholder="Setup Name" value={form.setupName} onChange={handleChange} className="border border-gray-600 p-3 rounded-lg bg-gray-700 text-white focus:ring-blue-500 focus:border-blue-500" required />
+
+              {/* Entry Type Dropdown */}
+              <select name="entryType" value={form.entryType} onChange={handleChange} className="border border-gray-600 p-3 rounded-lg bg-gray-700 text-white focus:ring-blue-500 focus:border-blue-500">
+                {ENTRY_TYPES.map(et => <option key={et} value={et}>{et}</option>)}
+              </select>
+
+              {/* Entry Trigger Dropdown */}
+              <select name="entryTrigger" value={form.entryTrigger} onChange={handleChange} className="border border-gray-600 p-3 rounded-lg bg-gray-700 text-white focus:ring-blue-500 focus:border-blue-500">
+                {ENTRY_TRIGGER.map(etr => <option key={etr} value={etr}>{etr}</option>)}
+              </select>
+
+              {/* Time Frame Dropdown */}
+              <select name="timeFrame" value={form.timeFrame} onChange={handleChange} className="border border-gray-600 p-3 rounded-lg bg-gray-700 text-white focus:ring-blue-500 focus:border-blue-500">
+                {TIME_FRAME.map(tfr => <option key={tfr} value={tfr}>{tfr}</option>)}
+              </select>
+
+              {/* Trade Management Note Dropdown */}
+              <select name="tradeManagemet" value={form.tradeManagemet} onChange={handleChange} className="border border-gray-600 p-3 rounded-lg bg-gray-700 text-white focus:ring-blue-500 focus:border-blue-500">
+                {TRADE_MANAGEMENT.map(tmt => <option key={tmt} value={tmt}>{tmt}</option>)}
+              </select>
+
+            </div>
+
+
+          {/* Form - 4*/}
+
+            <div className="p-4">
+              <h1 className="font-bold"> 4. Market Context</h1>
+            </div>
+            {/* Daily Bias Dropdown */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-6 p-6">
+              <select name="dailyBias" value={form.dailyBias} onChange={handleChange} className="border border-gray-600 p-3 rounded-lg bg-gray-700 text-white focus:ring-blue-500 focus:border-blue-500">
+                {DAILY_BIAS.map(dbs => <option key={dbs} value={dbs}>{dbs}</option>)}
+              </select>
+
+              {/* News Event Dropdown */}
+              <select name="newsEvent" value={form.newsEvent} onChange={handleChange} className="border border-gray-600 p-3 rounded-lg bg-gray-700 text-white focus:ring-blue-500 focus:border-blue-500">
+                {NEWS_EVENT.map(nets => <option key={nets} value={nets}>{nets}</option>)}
+              </select>
+
+              {/* Volatility Conditions Dropdown */}
+              <select name="volatilityConditions" value={form.volatilityConditions} onChange={handleChange} className="border border-gray-600 p-3 rounded-lg bg-gray-700 text-white focus:ring-blue-500 focus:border-blue-500">
+                {VOLATILITY_CONDITIONS.map(res => <option key={res} value={res}>{res}</option>)}
+              </select>
+            </div>
+
+
+          {/* Form - 5*/}
+
+            <div className="p-4">
+              <h1 className="font-bold"> 5. Pschology & Discipline</h1>
+            </div>
+            {/* Session Dropdown */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-6 p-6">
+
+              {/* Confidence Level Dropdown */}
+              <select name="confidence" value={form.confidence} onChange={handleChange} className="border border-gray-600 p-3 rounded-lg bg-gray-700 text-white focus:ring-blue-500 focus:border-blue-500">
+                {CONFIDENCE_LEVELS.map(cl => <option key={cl} value={cl}>{cl}</option>)}
+              </select>
+
+              {/* Emotional State Dropdown */}
+              <select name="emotionalState" value={form.emotionalState} onChange={handleChange} className="border border-gray-600 p-3 rounded-lg bg-gray-700 text-white focus:ring-blue-500 focus:border-blue-500">
+                {EMOTIONAL_STATE.map(els => <option key={els} value={els}>{els}</option>)}
+              </select>
+
+              {/* Rule Adherence Dropdown */}
+              <select name="ruleAdherence" value={form.ruleAdherence} onChange={handleChange} className="border border-gray-600 p-3 rounded-lg bg-gray-700 text-white focus:ring-blue-500 focus:border-blue-500">
+                {RULE_ADHERENCE.map(rah => <option key={rah} value={rah}>{rah}</option>)}
+              </select>
+
+              {/* Mistake Made Dropdown */}
+              <select name="mistakesMade" value={form.mistakesMade} onChange={handleChange} className="border border-gray-600 p-3 rounded-lg bg-gray-700 text-white focus:ring-blue-500 focus:border-blue-500">
+                {MISTAKES_MADE.map(mm => <option key={mm} value={mm}>{mm}</option>)}
+              </select>
+              {/* Lessons Learned */}
+              <textarea name="lessonLearned" placeholder="Lessons Learned ... Note" value={form.emotionNote} onChange={handleChange} rows="4" className="border border-gray-600 p-3 rounded-lg bg-gray-700 text-white col-span-1 sm:col-span-2 md:col-span-3 focus:ring-blue-500 focus:border-blue-500"></textarea>
+
+            </div>
+
+
+          {/* Form - 6*/}
+
+            <div className="p-4">
+              <h1 className="font-bold"> 6. Visual Evidence</h1>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-6 p-6">
+
+              {/* Screenshot Links */}
+              <input name="beforeLink" placeholder="Before Screenshot Link" value={form.beforeLink} onChange={handleChange} className="border border-gray-600 p-3 rounded-lg bg-gray-700 text-white focus:ring-blue-500 focus:border-blue-500" required />
+              <input name="afterLink" placeholder="After Screenshot Link" value={form.afterLink} onChange={handleChange} className="border border-gray-600 p-3 rounded-lg bg-gray-700 text-white focus:ring-blue-500 focus:border-blue-500" />
+
+              <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-lg col-span-1 sm:col-span-2 md:col-span-3 flex items-center justify-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-plus-circle">
+                  <circle cx="12" cy="12" r="10"></circle><path d="M8 12h8"></path><path d="M12 8v8"></path>
+                </svg> {editingId ? "Update Trade" : "Add Trade"}
+              </button>
+            </div>
           </form>
 
           {/* Table */}

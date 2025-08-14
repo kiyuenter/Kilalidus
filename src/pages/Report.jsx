@@ -215,6 +215,7 @@ export default function App() {
         
         const stats = getSummaryStats(data);
         const reportData = data.map(entry => ({
+        /* Form 1 */ 
             "Date": entry.date,
             "Entry Time": entry.entryTime,
             "Pair": entry.pair,
@@ -224,14 +225,33 @@ export default function App() {
             "Entry Price": entry.entryPrice,
             "Stop Loss": entry.stopLoss,
             "Take Profit": entry.takeProfit,
+            "Pip Gain/Loss": entry.pipgainloss,
+
+        /* Form 2 */
             "Risk Reward": entry.rr,
-            "Entry Model": entry.entryType,
-            "Closed by": entry.result,
-            "Close Reason": entry.closeReason,
-            "Profit/Loss": entry.profitLoss,
-            "Analysis Link": entry.link,
+            "Win/Loss Result": entry.winLoss,
+            "Cumulative Balance": entry.cumulativeBalance,
+
+        /* Form 3 */
+            "Setup Name": entry.setupName,
+            "Enter Trigger": entry.entryTrigger,
+            "Timeframe Used": entry.timeFrame,
+            "Trade Management Note": entry.tradeManagemet,
+
+        /* Form 4 */
+            "Daily Bias": entry.dailyBias,
+            "News Event": entry.newsEvent,
+            "Volatility Conditions": entry.volatilityConditions,
+
+        /* Form 5 */
             "Confidence Level": entry.confidence,
-            "Emotion Note": entry.emotionNote,
+            "Emotional State": entry.emotionalState,
+            "Rule Adherence": entry.ruleAdherence,
+            "Mistakes Made": entry.mistakesMade,
+
+        /* Form 6 */
+            "Before Screenshot": entry.beforeLink,
+            "After Screenshoot": entry.afterLink,
         }));
         
         // Prepare data for the Summary sheet
