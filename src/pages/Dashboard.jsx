@@ -5,7 +5,7 @@ import { getAuth, signInAnonymously, onAuthStateChanged } from "firebase/auth";
 import { getDatabase, ref, onValue } from "firebase/database";
 import {
   LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
-  PieChart, Pie, Cell, Legend
+  PieChart, Pie, Cell, Legend, BarChart, Bar
 } from "recharts";
 import CalendarHeatmap from "../components/CalendarHeatmap"; // Use your heatmap component
 
@@ -20,11 +20,28 @@ const firebaseConfig = {
   appId: "1:267336922475:web:b33249d0323b1f030a482e"
 };
 
+// This component displays the map key for the trading strategies.
+const StrategyKey = ({ strategyMap }) => {
+  return (
+    <div className="bg-gray-800 p-6 rounded shadow-xl md:w-96">
+      <h2 className="text-xl font-semibold mb-4">Strategy Key</h2>
+      <ul className="text-gray-400">
+        {Object.entries(strategyMap).map(([original, display]) => (
+          <li key={original} className="mb-2">
+            <span className="font-bold text-white">{display}:</span> {original}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+};
+
 export default function Dashboard() {
   const [entries, setEntries] = useState([]);
   const [userId, setUserId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [strategyMap, setStrategyMap] = useState({});
 
   // Fetch data from Firebase
   useEffect(() => {
@@ -48,8 +65,18 @@ export default function Dashboard() {
                 date: data[id].date || new Date().toLocaleDateString()
               }));
               setEntries(loadedEntries.sort((a, b) => new Date(a.date) - new Date(b.date)));
+
+              // Build and set the strategy map
+              const uniqueTypes = [...new Set(loadedEntries.map(e => e.entryType))].filter(Boolean).sort();
+              const newTypeMap = {};
+              uniqueTypes.forEach((type, index) => {
+                newTypeMap[type] = `Strategy ${index + 1}`;
+              });
+              setStrategyMap(newTypeMap);
+
             } else {
               setEntries([]);
+              setStrategyMap({});
             }
             setLoading(false);
           },
@@ -78,9 +105,11 @@ export default function Dashboard() {
 
   // --- Stats ---
   const stats = useMemo(() => {
-    if (entries.length === 0) return { totalPnL: "$0", profitFactor: "N/A", avgWinningTrade: "$0", avgLosingTrade: "$0", winRate: "0%" };
+    if (entries.length === 0) return { totalPnL: "$0", profitFactor: "N/A", avgWinningTrade: "$0", avgLosingTrade: "$0", winRate: "0%", avgRiskReward: "N/A" };
 
     let totalPnL = 0, totalProfit = 0, totalLoss = 0, winningTrades = 0, losingTrades = 0;
+    let totalRiskReward = 0, riskRewardCount = 0;
+
     entries.forEach(entry => {
       const pnl = parseFloat(entry.profitLoss);
       if (!isNaN(pnl)) {
@@ -88,19 +117,27 @@ export default function Dashboard() {
         if (pnl > 0) { totalProfit += pnl; winningTrades++; }
         else if (pnl < 0) { totalLoss += pnl; losingTrades++; }
       }
+      
+      const rr = parseFloat(entry.rr);
+      if (!isNaN(rr)) {
+        totalRiskReward += rr;
+        riskRewardCount++;
+      }
     });
 
     const profitFactor = totalLoss !== 0 ? (totalProfit / Math.abs(totalLoss)).toFixed(2) : "N/A";
     const avgWinningTrade = winningTrades > 0 ? (totalProfit / winningTrades).toFixed(2) : "0";
     const avgLosingTrade = losingTrades > 0 ? (totalLoss / losingTrades).toFixed(2) : "0";
     const winRate = ((winningTrades / entries.length) * 100).toFixed(0);
+    const avgRiskReward = riskRewardCount > 0 ? (totalRiskReward / riskRewardCount).toFixed(2) : "N/A";
 
     return {
       totalPnL: `$${totalPnL.toFixed(2)}`,
       profitFactor,
       avgWinningTrade: `$${avgWinningTrade}`,
       avgLosingTrade: `$${avgLosingTrade}`,
-      winRate: `${winRate}%`
+      winRate: `${winRate}%`,
+      avgRiskReward: avgRiskReward !== "N/A" ? `${avgRiskReward}:1` : "N/A"
     };
   }, [entries]);
 
@@ -130,6 +167,22 @@ export default function Dashboard() {
       { name: "Losers", value: losers, color: "#ef4444" },
     ];
   }, [entries]);
+
+   // --- Bar Chart Data for Entry Types ---
+  const entryTypeData = useMemo(() => {
+    const counts = entries.reduce((acc, entry) => {
+      const type = entry.entryType || "N/A";
+      const displayType = strategyMap[type] || type; // Use the mapped name or the original type
+      acc[displayType] = (acc[displayType] || 0) + 1;
+      return acc;
+    }, {});
+    
+    return Object.keys(counts).map(key => ({
+      name: key,
+      trades: counts[key]
+    }));
+  }, [entries, strategyMap]);
+
 
   const StatCard = ({ label, value }) => (
     <div className="bg-gray-800 rounded-lg shadow p-4 flex flex-col items-center">
@@ -183,12 +236,13 @@ export default function Dashboard() {
           <span className="font-semibold">User ID:</span> {userId}
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-5 gap-6 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-6 gap-6 mb-8">
           <StatCard label="Total P&L" value={stats.totalPnL} />
           <StatCard label="Profit Factor" value={stats.profitFactor} />
           <StatCard label="Avg Winning Trade" value={stats.avgWinningTrade} />
           <StatCard label="Avg Losing Trade" value={stats.avgLosingTrade} />
           <StatCard label="Win Rate" value={stats.winRate} />
+          <StatCard label="Avg R:R" value={stats.avgRiskReward} />
         </div>
 
         <div className="flex flex-col md:flex-row gap-6 mb-6">
@@ -230,15 +284,33 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Recent Trades + Calendar */}
         <div className="flex flex-col md:flex-row gap-6 mb-6">
+          {/* Bar Chart for Entry Types */}
+          <div className="bg-gray-800 p-6 rounded shadow mb-6 flex-1">
+            <h2 className="text-xl font-semibold mb-4">Trades by Entry Type</h2>
+            <ResponsiveContainer width="100%" height={250}>
+              <BarChart data={entryTypeData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#444" />
+                <XAxis dataKey="name" stroke="#aaa" />
+                <YAxis stroke="#aaa" allowDecimals={false} />
+                <Tooltip />
+                <Bar dataKey="trades" fill="#8884d8" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+          {Object.keys(strategyMap).length > 0 && <StrategyKey strategyMap={strategyMap} />} 
+          </div>
+        <div className="flex flex-col md:flex-row gap-6 mb-6">
+          {/* Recent Trades + Calendar */}
           <div className="flex-1">
             <TradesPositionsTable entries={entries.slice(-8).reverse()} />
           </div>
+
           <div className="w-full md:w-96">
-            <CalendarHeatmap entries={entries} />
-          </div>
+          <CalendarHeatmap entries={entries} />
         </div>
+        </div>
+        
       </main>
     </div>
   );

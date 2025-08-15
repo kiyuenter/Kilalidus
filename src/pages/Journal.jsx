@@ -10,7 +10,7 @@ export default function App() {
     entryTime: "",
     entryType: "Entry Model",
     result: "BE",
-    confidence: "Medium",
+    confidence: "Confidence Level",
     pair: "",
     lotSize: "",
     direction: "",
