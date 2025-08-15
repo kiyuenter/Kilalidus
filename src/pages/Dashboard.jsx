@@ -141,6 +141,17 @@ export default function Dashboard() {
     };
   }, [entries]);
 
+    // --- Trade Outcome Stats ---
+  const outcomeStats = useMemo(() => {
+    const totalTrades = entries.length;
+    const tpHits = entries.filter(e => e.closeReason === "TP hit").length;
+    const beHits = entries.filter(e => e.closeReason === "BE hit").length;
+    const slHits = entries.filter(e => e.closeReason === "SL hit").length;
+
+    return { totalTrades, tpHits, beHits, slHits };
+  }, [entries]);
+
+
   // --- Cumulative PnL Line Data ---
   const lineData = useMemo(() => {
     if (entries.length === 0) return [];
@@ -300,6 +311,15 @@ export default function Dashboard() {
           </div>
           {Object.keys(strategyMap).length > 0 && <StrategyKey strategyMap={strategyMap} />} 
           </div>
+
+          {/* New section for trade outcome stats */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 mb-8">
+          <StatCard label="Total Trades" value={outcomeStats.totalTrades} />
+          <StatCard label="TP Hits" value={outcomeStats.tpHits} />
+          <StatCard label="BE Hits" value={outcomeStats.beHits} />
+          <StatCard label="SL Hits" value={outcomeStats.slHits} />
+        </div>
+
         <div className="flex flex-col md:flex-row gap-6 mb-6">
           {/* Recent Trades + Calendar */}
           <div className="flex-1">
