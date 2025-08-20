@@ -116,31 +116,46 @@ const Notebook = () => {
     };
     
     // Auto-calculate RR Ratio and Pip Gain/Loss
-    const calculateMetrics = (entry) => {
-        const entryPrice = parseFloat(entry.entryPrice);
-        const stopLoss = parseFloat(entry.stopLoss);
-        const takeProfit = parseFloat(entry.takeProfit);
-        const exitPrice = parseFloat(entry.exitPrice);
+   const calculateMetrics = (entry) => {
+    const entryPrice = parseFloat(entry.entryPrice);
+    const stopLoss = parseFloat(entry.stopLoss);
+    const takeProfit = parseFloat(entry.takeProfit);
+    const exitPrice = parseFloat(entry.exitPrice);
 
-        let rrRatio = '';
-        let pipGainLoss = '';
-        let pnl = '';
+    let rrRatio = '';
+    let pipGainLoss = '';
 
-        if (!isNaN(entryPrice) && !isNaN(stopLoss) && !isNaN(takeProfit)) {
-            const riskPips = Math.abs(entryPrice - stopLoss);
-            const rewardPips = Math.abs(takeProfit - entryPrice);
-            if (riskPips > 0) {
-                rrRatio = (rewardPips / riskPips).toFixed(2);
-            }
-        }
-        
-        if (!isNaN(entryPrice) && !isNaN(exitPrice)) {
-            pipGainLoss = (exitPrice - entryPrice).toFixed(2);
-            pnl = (parseFloat(entry.pnl) || 0).toFixed(2); // Keep old pnl field
-        }
+    // Determine if it's a long or short trade
+    // A long trade's stop loss is below the entry price.
+    // A short trade's stop loss is above the entry price.
+    const isLongTrade = !isNaN(entryPrice) && !isNaN(stopLoss) && entryPrice > stopLoss;
+    const isShortTrade = !isNaN(entryPrice) && !isNaN(stopLoss) && entryPrice < stopLoss;
 
-        return { rrRatio, pipGainLoss, pnl };
-    };
+    // Calculate RR Ratio
+    if (!isNaN(entryPrice) && !isNaN(stopLoss) && !isNaN(takeProfit)) {
+        const riskPips = Math.abs(entryPrice - stopLoss);
+        const rewardPips = Math.abs(takeProfit - entryPrice);
+        if (riskPips > 0) {
+            rrRatio = (rewardPips / riskPips).toFixed(2);
+        }
+    }
+    
+    // Calculate Pip Gain/Loss based on trade direction
+    if (!isNaN(entryPrice) && !isNaN(exitPrice)) {
+        if (isLongTrade) {
+            pipGainLoss = (exitPrice - entryPrice).toFixed(2);
+        } else if (isShortTrade) {
+            // For short trades, a lower exit price means a gain
+            pipGainLoss = (entryPrice - exitPrice).toFixed(2);
+        }
+    }
+
+    // The pnl field seems to be for backward compatibility and is not auto-calculated.
+    // It's better to rely on pipGainLoss for all calculations.
+    const pnl = (parseFloat(entry.pnl) || 0).toFixed(2);
+
+    return { rrRatio, pipGainLoss, pnl };
+};
 
     // Handle form submission (add or update)
     const handleAddOrUpdateEntry = async (e) => {
