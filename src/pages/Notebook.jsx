@@ -140,11 +140,8 @@ const Notebook = () => {
         }
     }
     
-    // Calculate Pip Gain/Loss based on trade direction
-    
 
     // The pnl field seems to be for backward compatibility and is not auto-calculated.
-    // It's better to rely on pipGainLoss for all calculations.
     const pnl = (parseFloat(entry.pnl) || 0).toFixed(2);
 
     return { rrRatio, pnl };
@@ -155,8 +152,8 @@ const Notebook = () => {
         e.preventDefault();
         if (!user) return;
         
-        const { rrRatio, pipGainLoss } = calculateMetrics(newEntry);
-        const entryData = { ...newEntry, rrRatio, pipGainLoss, pnl: parseFloat(newEntry.pnl) || 0 };
+        const { rrRatio } = calculateMetrics(newEntry);
+        const entryData = { ...newEntry, rrRatio, pnl: parseFloat(newEntry.pnl) || 0 };
 
         try {
             if (editingEntryId) {
