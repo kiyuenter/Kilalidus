@@ -352,7 +352,7 @@ const Notebook = () => {
                             {/* RR Ratio will be auto-calculated */}
                             <div className="flex flex-col">
                                 <label htmlFor="pipGainLoss" className="text-sm font-semibold text-gray-300 mb-1">Pip Gain/Loss (Auto-calculated)</label>
-                                <input type="text" id="pipGainLoss" name="pipGainLoss" value={calculateMetrics(newEntry).pipGainLoss} readOnly className="p-3 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none" />
+                                <input type="text" id="pipGainLoss" name="pipGainLoss" value={newEntry.pipGainLoss} className="p-3 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none" />
                             </div>
                             <div className="flex flex-col">
                                 <label htmlFor="rrRatio" className="text-sm font-semibold text-gray-300 mb-1">R:R Ratio (Auto-calculated)</label>
