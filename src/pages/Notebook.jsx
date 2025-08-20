@@ -141,20 +141,13 @@ const Notebook = () => {
     }
     
     // Calculate Pip Gain/Loss based on trade direction
-    if (!isNaN(entryPrice) && !isNaN(exitPrice)) {
-        if (isLongTrade) {
-            pipGainLoss = (exitPrice - entryPrice).toFixed(2);
-        } else if (isShortTrade) {
-            // For short trades, a lower exit price means a gain
-            pipGainLoss = (entryPrice - exitPrice).toFixed(2);
-        }
-    }
+    
 
     // The pnl field seems to be for backward compatibility and is not auto-calculated.
     // It's better to rely on pipGainLoss for all calculations.
     const pnl = (parseFloat(entry.pnl) || 0).toFixed(2);
 
-    return { rrRatio, pipGainLoss, pnl };
+    return { rrRatio, pnl };
 };
 
     // Handle form submission (add or update)
