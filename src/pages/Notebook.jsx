@@ -370,6 +370,8 @@ const Notebook = () => {
                                     <option value="">Select Trigger</option>
                                     <option value="FVG">FVG</option>
                                     <option value="OB">OB</option>
+                                    <option value="Other">BB</option>
+                                    <option value="Other">MB</option>
                                     <option value="Liquidity Sweep">Liquidity Sweep</option>
                                     <option value="Other">Other</option>
                                 </select>
