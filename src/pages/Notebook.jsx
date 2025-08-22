@@ -226,7 +226,7 @@ const Notebook = () => {
     const totalTrades = entries.length;
     const wins = entries.filter(e => e.pipGainLoss > 0).length;
     const losses = entries.filter(e => e.pipGainLoss < 0).length;
-    const breakEvens = entries.filter(e => e.pipGainLoss === '0.00').length;
+    const breakEvens = entries.filter(e => e.exitResult === 'BE Hit').length;
     const winRate = totalTrades > 0 ? ((wins / totalTrades) * 100).toFixed(2) : 0;
     const netPips = entries.reduce((sum, e) => sum + parseFloat(e.pipGainLoss || 0), 0).toFixed(2);
     
