@@ -9,7 +9,7 @@ export default function App() {
     session: "Session",
     entryTime: "",
     entryType: "Entry Model",
-    result: "",
+    result: "", // Initial state is an empty string
     confidence: "Confidence Level",
     pair: "",
     lotSize: "",
@@ -59,7 +59,7 @@ export default function App() {
 
   const SESSIONS = ['Session', 'London', 'New York', 'Asian'];
   const ENTRY_TYPES = ['Setup Type', 'HTF POI + MSS + FVG', 'HTF POI + MSS + FVG + BB', 'HTF POI + MSS + BB', 'HTF POI + MSS + FIBONACCHI', 'OB', 'Reversal'];
-  const RESULTS = ['Win', 'Loss', 'BE', 'Win with Partial'];
+  const RESULTS = ['Result (Win, Loss, BE, Partial)', 'Win', 'Loss', 'BE', 'Win with Partial']; // Changed the first element to be a clear placeholder
   const CONFIDENCE_LEVELS = ['Confidence Level', 'Low', 'Medium', 'High'];
   const WIN_LOSS = ['Result', 'Win', 'Loss', 'Break Even'];
   const ENTRY_TRIGGER = ['Entry Trigger', 'FVG', 'OB', 'BB', 'FIBONACCHI', 'MB'];
@@ -68,7 +68,7 @@ export default function App() {
   const DAILY_BIAS = ['Daily BIAS', 'BULLISH', 'BEARISH', 'CONSOLIDATE'];
   const NEWS_EVENT = ['News Event', 'Nothing', 'CPI', 'PPI', 'NFP', 'FOMC'];
   const VOLATILITY_CONDITIONS = ['Volatility Conditions', 'HIGH', 'NORMAL', 'LOW'];
-  const EMOTIONAL_STATE =   ['Emotional State', 'Auxious', 'Greedy', 'Calm', 'Revenge Trade'];
+  const EMOTIONAL_STATE =    ['Emotional State', 'Auxious', 'Greedy', 'Calm', 'Revenge Trade'];
   const MISTAKES_MADE = ['Mistake Made', 'No mistake', 'Over trade', 'Entered to early', 'Entered to late', 'Moved SL'];
   const RULE_ADHERENCE = ['Rule Adherence', 'YES', 'NO'];
 
@@ -197,6 +197,7 @@ export default function App() {
         profitLoss = (entry - exit) * lot * 100;
       }
     } else {
+      // Use 100000 for standard 4-digit pairs (like EUR/USD) or 5-digit brokers, which is common
       if (direction === "Buy") {
         profitLoss = (exit - entry) * lot * 100000;
       } else if (direction === "Sell") {
@@ -215,6 +216,25 @@ export default function App() {
     // are changed after a closeReason is set
     if (name === "closeReason" || (form.closeReason && ["entryPrice", "stopLoss", "takeProfit", "lotSize", "direction", "pair"].includes(name))) {
       updatedForm.profitLoss = calculateProfitLossBasedOnCloseReason(updatedForm);
+    }
+    
+    // Auto-set the 'result' based on the 'closeReason' if a close reason is selected.
+    // The user can still override this with the separate 'result' dropdown, 
+    // but this provides a logical default.
+    if (name === "closeReason") {
+      if (value === "TP hit") {
+        updatedForm.result = "Win";
+      } else if (value === "SL hit") {
+        updatedForm.result = "Loss";
+      } else if (value === "BE hit") {
+        updatedForm.result = "BE";
+      } else if (value === "Manual") {
+        // If Manual, don't automatically set the result, let the user choose.
+        // If the current result is one of the auto-set values, reset it to an empty string.
+        if (["Win", "Loss", "BE"].includes(form.result)) {
+            updatedForm.result = ""; 
+        }
+      }
     }
 
     setForm(updatedForm);
@@ -249,7 +269,7 @@ export default function App() {
       session: "London",
       entryTime: "",
       entryType: "HTF POI",
-      result: "",
+      result: "", // Correctly reset to empty string
       confidence: "Medium",
       pair: "",
       lotSize: "",
@@ -398,26 +418,38 @@ export default function App() {
 
 
           {/* Form - 2*/}
+          <div className="p-4">
+            <h1 className="font-bold"> 2. Performance Matrics</h1>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-6 p-6">
 
-            <div className="p-4">
-              <h1 className="font-bold"> 2. Performance Matrics</h1>
+            {/* RR Display */}
+            <div className="flex items-center justify-center p-3 rounded-lg bg-gray-700 text-white border border-gray-600">
+              <span className="text-sm font-semibold text-gray-400 mr-2">R:R</span>
+              <span className="font-bold text-lg text-green-400">{currentRR}</span>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-6 p-6">
+            
+            {/* >>>>>>>>>>>>>>>>>>>>>>> FIX: ADDED RESULT DROPDOWN <<<<<<<<<<<<<<<<<<<<<<<< */}
+            {/* Trade Result Dropdown */}
+            <select 
+              name="result" 
+              value={form.result} 
+              onChange={handleChange} 
+              className="border border-gray-600 p-3 rounded-lg bg-gray-700 text-white focus:ring-blue-500 focus:border-blue-500"
+              required // Added required since this is a key metric for your table
+            >
+              {RESULTS.map(res => <option key={res} value={res === 'Result (Win, Loss, BE, Partial)' ? "" : res} disabled={res === 'Result (Win, Loss, BE, Partial)'}>{res}</option>)}
+            </select>
+            {/* >>>>>>>>>>>>>>>>>>>>>>> END FIX <<<<<<<<<<<<<<<<<<<<<<<< */}
 
-              {/* RR Display */}
-              <div className="flex items-center justify-center p-3 rounded-lg bg-gray-700 text-white border border-gray-600">
-                <span className="text-sm font-semibold text-gray-400 mr-2">R:R</span>
-                <span className="font-bold text-lg text-green-400">{currentRR}</span>
-              </div>
+            {/* Win/Loss Result (I kept this as you had it, though it seems redundant with 'result') */}
+            <select name="winLoss" value={form.winLoss} onChange={handleChange} className="border border-gray-600 p-3 rounded-lg bg-gray-700 text-white focus:ring-blue-500 focus:border-blue-500">
+              {WIN_LOSS.map(wL => <option key={wL} value={wL}>{wL}</option>)}
+            </select>
 
-              {/* Win/Loss Result */}
-              <select name="winLoss" value={form.winLoss} onChange={handleChange} className="border border-gray-600 p-3 rounded-lg bg-gray-700 text-white focus:ring-blue-500 focus:border-blue-500">
-                {WIN_LOSS.map(wL => <option key={wL} value={wL}>{wL}</option>)}
-              </select>
-
-              {/* Cumulative Balance */}
-              <input name="cumulativeBalance" type="number" placeholder="Cumulative Balance" value={form.cumulativeBalance} onChange={handleChange} className="border border-gray-600 p-3 rounded-lg bg-gray-700 text-white focus:ring-blue-500 focus:border-blue-500" required />
-            </div>
+            {/* Cumulative Balance */}
+            <input name="cumulativeBalance" type="number" placeholder="Cumulative Balance" value={form.cumulativeBalance} onChange={handleChange} className="border border-gray-600 p-3 rounded-lg bg-gray-700 text-white focus:ring-blue-500 focus:border-blue-500" required />
+          </div>
 
 
           {/* Form - 3*/}
