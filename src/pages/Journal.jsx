@@ -9,7 +9,7 @@ export default function App() {
     session: "Session",
     entryTime: "",
     entryType: "Entry Model",
-    result: "BE",
+    result: "",
     confidence: "Confidence Level",
     pair: "",
     lotSize: "",
