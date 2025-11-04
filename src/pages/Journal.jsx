@@ -249,7 +249,7 @@ export default function App() {
       session: "London",
       entryTime: "",
       entryType: "HTF POI",
-      result: "BE",
+      result: "",
       confidence: "Medium",
       pair: "",
       lotSize: "",
